@@ -116,7 +116,7 @@ closeButton.MouseEnter:Connect(function()
 end)
 
 closeButton.MouseLeave:Connect(function()
-    closeButton.Text = "Close"
+    closeButton.Text = ""
 end)
 
 -- Minimize Button (Mac OS Style)
@@ -151,7 +151,7 @@ minimizeButton.MouseEnter:Connect(function()
 end)
 
 minimizeButton.MouseLeave:Connect(function()
-    minimizeButton.Text = "Minimize"
+    minimizeButton.Text = ""
 end)
 
 -- Fly Speed Label
