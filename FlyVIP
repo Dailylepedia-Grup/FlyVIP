@@ -90,7 +90,7 @@ titleLabel.Parent = frame
 local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0, 12, 0, 12)
 closeButton.Position = UDim2.new(1, -30, 0, 8)
-closeButton.Text = "Close"
+closeButton.Text = ""
 closeButton.BackgroundColor3 = Color3.fromRGB(255, 96, 92)
 closeButton.AutoButtonColor = false
 closeButton.Parent = frame
@@ -123,7 +123,7 @@ end)
 local minimizeButton = Instance.new("TextButton")
 minimizeButton.Size = UDim2.new(0, 12, 0, 12)
 minimizeButton.Position = UDim2.new(1, -50, 0, 8)
-minimizeButton.Text = "Minimize"
+minimizeButton.Text = ""
 minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 189, 68)
 minimizeButton.AutoButtonColor = false
 minimizeButton.Parent = frame
