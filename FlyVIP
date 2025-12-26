@@ -172,47 +172,107 @@ noclipButton.MouseButton1Click:Connect(toggleNoClip)
 ------------------------------------------------
 --// TELEPORT
 ------------------------------------------------
+local selectedPlayer = nil
+
 local tpLabel = Instance.new("TextLabel", frame)
-tpLabel.Text = "Teleport To Player"
-tpLabel.Position = UDim2.new(0.1,0,0.55,0)
 tpLabel.Size = UDim2.new(0.8,0,0,20)
+tpLabel.Position = UDim2.new(0.1,0,0.55,0)
+tpLabel.Text = "Teleport To Player"
 tpLabel.BackgroundTransparency = 1
-tpLabel.TextColor3 = Color3.fromRGB(160,160,160)
+tpLabel.TextColor3 = Color3.fromRGB(170,170,170)
+tpLabel.Font = Enum.Font.SourceSans
+tpLabel.TextSize = 13
 
-local dropdown = Instance.new("TextButton", frame)
-dropdown.Text = "Select Player"
-dropdown.Position = UDim2.new(0.1,0,0.62,0)
-dropdown.Size = UDim2.new(0.55,0,0,25)
-dropdown.BackgroundColor3 = Color3.fromRGB(220,220,220)
+--// DROPDOWN BUTTON
+local playerDropdown = Instance.new("TextButton", frame)
+playerDropdown.Size = UDim2.new(0.55,0,0,25)
+playerDropdown.Position = UDim2.new(0.1,0,0.62,0)
+playerDropdown.Text = "Select Player"
+playerDropdown.BackgroundColor3 = Color3.fromRGB(230,230,230)
+playerDropdown.TextColor3 = Color3.fromRGB(0,0,0)
+playerDropdown.Font = Enum.Font.SourceSans
+playerDropdown.TextSize = 13
+Instance.new("UICorner", playerDropdown).CornerRadius = UDim.new(0.2,0)
 
-local tpBtn = Instance.new("TextButton", frame)
-tpBtn.Text = "Teleport"
-tpBtn.Position = UDim2.new(0.7,0,0.62,0)
-tpBtn.Size = UDim2.new(0.2,0,0,25)
-tpBtn.BackgroundColor3 = Color3.fromRGB(0,122,255)
-tpBtn.TextColor3 = Color3.new(1,1,1)
+--// TELEPORT BUTTON
+local tpButton = Instance.new("TextButton", frame)
+tpButton.Size = UDim2.new(0.25,0,0,25)
+tpButton.Position = UDim2.new(0.7,0,0.62,0)
+tpButton.Text = "Teleport"
+tpButton.BackgroundColor3 = Color3.fromRGB(0,122,255)
+tpButton.TextColor3 = Color3.new(1,1,1)
+tpButton.Font = Enum.Font.SourceSansBold
+tpButton.TextSize = 13
+Instance.new("UICorner", tpButton).CornerRadius = UDim.new(0.2,0)
 
-local selectedPlayer
+--// DROPDOWN FRAME
+local dropdownFrame = Instance.new("Frame", frame)
+dropdownFrame.Size = UDim2.new(0.55,0,0,120)
+dropdownFrame.Position = UDim2.new(0.1,0,0.7,0)
+dropdownFrame.BackgroundColor3 = Color3.fromRGB(245,245,245)
+dropdownFrame.Visible = false
+dropdownFrame.BorderSizePixel = 0
+Instance.new("UICorner", dropdownFrame).CornerRadius = UDim.new(0.1,0)
 
-dropdown.MouseButton1Click:Connect(function()
-	for _,plr in pairs(Players:GetPlayers()) do
+--// SCROLLING
+local scroll = Instance.new("ScrollingFrame", dropdownFrame)
+scroll.Size = UDim2.new(1,0,1,0)
+scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.ScrollBarImageTransparency = 0.3
+scroll.BackgroundTransparency = 1
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0,4)
+
+local function refreshPlayerList()
+	scroll:ClearAllChildren()
+	layout.Parent = scroll
+
+	for _,plr in ipairs(game.Players:GetPlayers()) do
 		if plr ~= player then
-			selectedPlayer = plr
-			dropdown.Text = plr.Name
-			break
+			local btn = Instance.new("TextButton", scroll)
+			btn.Size = UDim2.new(1,-8,0,24)
+			btn.Text = plr.Name
+			btn.BackgroundColor3 = Color3.fromRGB(220,220,220)
+			btn.TextColor3 = Color3.fromRGB(0,0,0)
+			btn.Font = Enum.Font.SourceSans
+			btn.TextSize = 13
+			Instance.new("UICorner", btn).CornerRadius = UDim.new(0.2,0)
+
+			btn.MouseButton1Click:Connect(function()
+				selectedPlayer = plr
+				playerDropdown.Text = plr.Name
+				dropdownFrame.Visible = false
+			end)
 		end
 	end
-end)
+end
 
-tpBtn.MouseButton1Click:Connect(function()
-	if not selectedPlayer then return end
-	if not selectedPlayer.Character then return end
-
-	local targetRoot = selectedPlayer.Character:FindFirstChild("HumanoidRootPart")
-	if targetRoot and rootPart then
-		rootPart.CFrame = targetRoot.CFrame * CFrame.new(0,0,-3)
+playerDropdown.MouseButton1Click:Connect(function()
+	dropdownFrame.Visible = not dropdownFrame.Visible
+	if dropdownFrame.Visible then
+		refreshPlayerList()
 	end
 end)
+
+tpButton.MouseButton1Click:Connect(function()
+	if not selectedPlayer then return end
+
+	local targetChar = selectedPlayer.Character
+	if not targetChar then return end
+
+	local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+	local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+
+	if targetRoot and myRoot then
+		myRoot.CFrame = targetRoot.CFrame * CFrame.new(0,0,-3)
+	end
+end)
+
+game.Players.PlayerAdded:Connect(refreshPlayerList)
+game.Players.PlayerRemoving:Connect(refreshPlayerList)
+
 
 ------------------------------------------------
 --// HOTKEY
