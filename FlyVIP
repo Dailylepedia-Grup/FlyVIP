@@ -374,7 +374,7 @@ discordButton.MouseButton1Click:Connect(function()
     discordButton.BackgroundColor3 = Color3.fromRGB(78, 93, 148) -- Darker discord color
     
     -- Open Discord invite with a Roblox system message
-    local inviteLink = "https://discord.gg/Spyydr4c"
+    local inviteLink = "https://discord.gg/vuKgv43WBQ"
     
     -- Use Roblox's internal function to open URL
     pcall(function()
