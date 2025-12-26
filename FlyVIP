@@ -1,284 +1,258 @@
---// SERVICES
+--================================--
+-- HAMDANSCRIPT ALL IN ONE (PRO)
+-- Fly / WalkSpeed / NoClip / Teleport Dropdown
+--================================--
+
+-- SERVICES
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local StarterGui = game:GetService("StarterGui")
+local UIS = game:GetService("UserInputService")
 
---// PLAYER
 local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local rootPart = character:WaitForChild("HumanoidRootPart")
 
---// UPDATE CHARACTER ON RESPAWN
-player.CharacterAdded:Connect(function(char)
-	character = char
-	humanoid = char:WaitForChild("Humanoid")
-	rootPart = char:WaitForChild("HumanoidRootPart")
-end)
+-- CHARACTER SAFE
+local function getChar()
+	return player.Character or player.CharacterAdded:Wait()
+end
 
---// SOUND
-local sound = Instance.new("Sound", workspace)
-sound.SoundId = "rbxassetid://6518811702"
-sound.Volume = 0.5
-sound:Play()
+--================================--
+-- GUI
+--================================--
 
---// GUI
-local screenGui = Instance.new("ScreenGui", player.PlayerGui)
-screenGui.Name = "HamdanScriptUI"
-screenGui.ResetOnSpawn = false
+local gui = Instance.new("ScreenGui")
+gui.Name = "HamdanScript"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
 
---// FRAME
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 300, 0, 360)
-frame.Position = UDim2.new(0.5, -150, -0.4, 0)
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0,280,0,320)
+frame.Position = UDim2.new(0.05,0,0.5,-160)
 frame.BackgroundColor3 = Color3.fromRGB(245,245,245)
 frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
-frame.ClipsDescendants = false
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,16)
 
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0.1,0)
-
---// TITLE
 local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1,0,0,30)
+title.Size = UDim2.new(1,0,0,40)
 title.Text = "HamdanScript"
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 16
-title.TextColor3 = Color3.fromRGB(180,180,180)
 title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(0,120,255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
 
---// SLIDE IN
-TweenService:Create(
-	frame,
-	TweenInfo.new(0.5, Enum.EasingStyle.Quad),
-	{Position = UDim2.new(0.5,-150,0,10)}
-):Play()
+--================================--
+-- STATE
+--================================--
 
-------------------------------------------------
---// VARIABLES
-------------------------------------------------
-local flySpeed = 50
-local flying = false
-local bodyVelocity, bodyGyro
+local flyEnabled = false
+local noclipEnabled = false
+local wsEnabled = false
+local selectedPlayer = nil
 
-local walkSpeedEnabled = false
-local defaultWalkSpeed = 16
-local customWalkSpeed = 50
+--================================--
+-- BUTTON CREATOR
+--================================--
 
-local noclip = false
-local noclipConnection
-
-------------------------------------------------
---// BUTTON MAKER
-------------------------------------------------
-local function createButton(text, posY, color)
+local function createButton(text, y, color)
 	local btn = Instance.new("TextButton", frame)
-	btn.Size = UDim2.new(0.8,0,0,30)
-	btn.Position = UDim2.new(0.1,0,posY,0)
+	btn.Size = UDim2.new(0.9,0,0,34)
+	btn.Position = UDim2.new(0.05,0,y,0)
 	btn.Text = text
-	btn.Font = Enum.Font.SourceSansBold
-	btn.TextSize = 14
-	btn.TextColor3 = Color3.new(1,1,1)
 	btn.BackgroundColor3 = color
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0.2,0)
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 13
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
 	return btn
 end
 
-------------------------------------------------
---// FLY
-------------------------------------------------
-local flyButton = createButton("Fly : OFF [F]", 0.15, Color3.fromRGB(0,122,255))
+--================================--
+-- BUTTONS
+--================================--
+
+local flyBtn = createButton("Fly : OFF [F]", 0.15, Color3.fromRGB(0,120,255))
+local wsBtn = createButton("WalkSpeed : OFF [X]", 0.28, Color3.fromRGB(0,170,80))
+local noclipBtn = createButton("NoClip : OFF", 0.41, Color3.fromRGB(255,140,0))
+
+--================================--
+-- WALKSPEED
+--================================--
+
+local function toggleWS()
+	wsEnabled = not wsEnabled
+	local hum = getChar():FindFirstChildOfClass("Humanoid")
+	if hum then
+		hum.WalkSpeed = wsEnabled and 50 or 16
+	end
+	wsBtn.Text = wsEnabled and "WalkSpeed : ON [X]" or "WalkSpeed : OFF [X]"
+end
+
+wsBtn.MouseButton1Click:Connect(toggleWS)
+UIS.InputBegan:Connect(function(i,g)
+	if not g and i.KeyCode == Enum.KeyCode.X then
+		toggleWS()
+	end
+end)
+
+--================================--
+-- NOCLIP
+--================================--
+
+RunService.Stepped:Connect(function()
+	if noclipEnabled then
+		for _,v in pairs(getChar():GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.CanCollide = false
+			end
+		end
+	end
+end)
+
+noclipBtn.MouseButton1Click:Connect(function()
+	noclipEnabled = not noclipEnabled
+	noclipBtn.Text = noclipEnabled and "NoClip : ON" or "NoClip : OFF"
+end)
+
+--================================--
+-- FLY
+--================================--
+
+local flyConn
+local bodyGyro, bodyVel
 
 local function toggleFly()
-	flying = not flying
-	flyButton.Text = flying and "Fly : ON [F]" or "Fly : OFF [F]"
+	flyEnabled = not flyEnabled
+	flyBtn.Text = flyEnabled and "Fly : ON [F]" or "Fly : OFF [F]"
 
-	if flying then
-		humanoid.PlatformStand = true
+	local hrp = getChar():WaitForChild("HumanoidRootPart")
 
-		bodyVelocity = Instance.new("BodyVelocity", rootPart)
-		bodyVelocity.MaxForce = Vector3.new(math.huge,math.huge,math.huge)
+	if flyEnabled then
+		bodyGyro = Instance.new("BodyGyro", hrp)
+		bodyGyro.P = 9e4
+		bodyGyro.MaxTorque = Vector3.new(9e9,9e9,9e9)
+		bodyGyro.CFrame = hrp.CFrame
 
-		bodyGyro = Instance.new("BodyGyro", rootPart)
-		bodyGyro.MaxTorque = Vector3.new(math.huge,math.huge,math.huge)
+		bodyVel = Instance.new("BodyVelocity", hrp)
+		bodyVel.MaxForce = Vector3.new(9e9,9e9,9e9)
 
-		RunService.RenderStepped:Connect(function()
-			if not flying then return end
-			local cam = workspace.CurrentCamera
-			local dir = Vector3.zero
-
-			if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
-			if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
-			if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
-			if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
-			if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.yAxis end
-			if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then dir -= Vector3.yAxis end
-
-			if dir.Magnitude > 0 then
-				bodyVelocity.Velocity = dir.Unit * flySpeed
-			else
-				bodyVelocity.Velocity = Vector3.zero
-			end
-
-			bodyGyro.CFrame = cam.CFrame
+		flyConn = RunService.RenderStepped:Connect(function()
+			bodyGyro.CFrame = workspace.CurrentCamera.CFrame
+			bodyVel.Velocity = workspace.CurrentCamera.CFrame.LookVector * 60
 		end)
 	else
-		humanoid.PlatformStand = false
-		if bodyVelocity then bodyVelocity:Destroy() end
+		if flyConn then flyConn:Disconnect() end
 		if bodyGyro then bodyGyro:Destroy() end
+		if bodyVel then bodyVel:Destroy() end
 	end
 end
 
-flyButton.MouseButton1Click:Connect(toggleFly)
-
-------------------------------------------------
---// WALK SPEED
-------------------------------------------------
-local walkButton = createButton("WalkSpeed : OFF [X]", 0.28, Color3.fromRGB(0,200,80))
-
-local function toggleWalkSpeed()
-	walkSpeedEnabled = not walkSpeedEnabled
-	walkButton.Text = walkSpeedEnabled and "WalkSpeed : ON [X]" or "WalkSpeed : OFF [X]"
-	humanoid.WalkSpeed = walkSpeedEnabled and customWalkSpeed or defaultWalkSpeed
-end
-
-walkButton.MouseButton1Click:Connect(toggleWalkSpeed)
-
-------------------------------------------------
---// NOCLIP
-------------------------------------------------
-local noclipButton = createButton("NoClip : OFF", 0.41, Color3.fromRGB(255,120,0))
-
-local function toggleNoClip()
-	noclip = not noclip
-	noclipButton.Text = noclip and "NoClip : ON" or "NoClip : OFF"
-
-	if noclip then
-		noclipConnection = RunService.Stepped:Connect(function()
-			for _,p in pairs(character:GetDescendants()) do
-				if p:IsA("BasePart") then p.CanCollide = false end
-			end
-		end)
-	else
-		if noclipConnection then noclipConnection:Disconnect() end
+flyBtn.MouseButton1Click:Connect(toggleFly)
+UIS.InputBegan:Connect(function(i,g)
+	if not g and i.KeyCode == Enum.KeyCode.F then
+		toggleFly()
 	end
-end
+end)
 
-noclipButton.MouseButton1Click:Connect(toggleNoClip)
+--================================--
+-- TELEPORT UI
+--================================--
 
-------------------------------------------------
---// TELEPORT
-------------------------------------------------
-local selectedPlayer = nil
+local label = Instance.new("TextLabel", frame)
+label.Position = UDim2.new(0.05,0,0.56,0)
+label.Size = UDim2.new(0.9,0,0,18)
+label.Text = "Teleport To Player"
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.fromRGB(120,120,120)
+label.Font = Enum.Font.Gotham
+label.TextSize = 12
+label.TextXAlignment = Enum.TextXAlignment.Left
 
-local tpLabel = Instance.new("TextLabel", frame)
-tpLabel.Size = UDim2.new(0.8,0,0,20)
-tpLabel.Position = UDim2.new(0.1,0,0.55,0)
-tpLabel.Text = "Teleport To Player"
-tpLabel.BackgroundTransparency = 1
-tpLabel.TextColor3 = Color3.fromRGB(170,170,170)
-tpLabel.Font = Enum.Font.SourceSans
-tpLabel.TextSize = 13
+local dropBtn = Instance.new("TextButton", frame)
+dropBtn.Position = UDim2.new(0.05,0,0.63,0)
+dropBtn.Size = UDim2.new(0.6,0,0,30)
+dropBtn.Text = "Select Player"
+dropBtn.BackgroundColor3 = Color3.fromRGB(230,230,230)
+dropBtn.TextColor3 = Color3.new(0,0,0)
+dropBtn.Font = Enum.Font.Gotham
+dropBtn.TextSize = 12
+Instance.new("UICorner", dropBtn).CornerRadius = UDim.new(0,8)
 
---// DROPDOWN BUTTON
-local playerDropdown = Instance.new("TextButton", frame)
-playerDropdown.Size = UDim2.new(0.55,0,0,25)
-playerDropdown.Position = UDim2.new(0.1,0,0.62,0)
-playerDropdown.Text = "Select Player"
-playerDropdown.BackgroundColor3 = Color3.fromRGB(230,230,230)
-playerDropdown.TextColor3 = Color3.fromRGB(0,0,0)
-playerDropdown.Font = Enum.Font.SourceSans
-playerDropdown.TextSize = 13
-Instance.new("UICorner", playerDropdown).CornerRadius = UDim.new(0.2,0)
+local tpBtn = Instance.new("TextButton", frame)
+tpBtn.Position = UDim2.new(0.68,0,0.63,0)
+tpBtn.Size = UDim2.new(0.27,0,0,30)
+tpBtn.Text = "Teleport"
+tpBtn.BackgroundColor3 = Color3.fromRGB(0,120,255)
+tpBtn.TextColor3 = Color3.new(1,1,1)
+tpBtn.Font = Enum.Font.GothamBold
+tpBtn.TextSize = 12
+Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0,8)
 
---// TELEPORT BUTTON
-local tpButton = Instance.new("TextButton", frame)
-tpButton.Size = UDim2.new(0.25,0,0,25)
-tpButton.Position = UDim2.new(0.7,0,0.62,0)
-tpButton.Text = "Teleport"
-tpButton.BackgroundColor3 = Color3.fromRGB(0,122,255)
-tpButton.TextColor3 = Color3.new(1,1,1)
-tpButton.Font = Enum.Font.SourceSansBold
-tpButton.TextSize = 13
-Instance.new("UICorner", tpButton).CornerRadius = UDim.new(0.2,0)
+--================================--
+-- DROPDOWN
+--================================--
 
---// DROPDOWN FRAME
-local dropdownFrame = Instance.new("Frame", frame)
-dropdownFrame.Size = UDim2.new(0.55,0,0,120)
-dropdownFrame.Position = UDim2.new(0.1,0,0.7,0)
-dropdownFrame.BackgroundColor3 = Color3.fromRGB(245,245,245)
-dropdownFrame.Visible = false
-dropdownFrame.BorderSizePixel = 0
-Instance.new("UICorner", dropdownFrame).CornerRadius = UDim.new(0.1,0)
+local dropFrame = Instance.new("Frame", frame)
+dropFrame.Position = UDim2.new(0.05,0,0.73,0)
+dropFrame.Size = UDim2.new(0.6,0,0,110)
+dropFrame.BackgroundColor3 = Color3.fromRGB(255,255,255)
+dropFrame.Visible = false
+dropFrame.BorderSizePixel = 0
+Instance.new("UICorner", dropFrame).CornerRadius = UDim.new(0,8)
 
---// SCROLLING
-local scroll = Instance.new("ScrollingFrame", dropdownFrame)
+local scroll = Instance.new("ScrollingFrame", dropFrame)
 scroll.Size = UDim2.new(1,0,1,0)
-scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 scroll.ScrollBarImageTransparency = 0.3
 scroll.BackgroundTransparency = 1
-scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
 local layout = Instance.new("UIListLayout", scroll)
-layout.Padding = UDim.new(0,4)
+layout.Padding = UDim.new(0,5)
 
-local function refreshPlayerList()
-	scroll:ClearAllChildren()
-	layout.Parent = scroll
+local function refreshPlayers()
+	for _,v in ipairs(scroll:GetChildren()) do
+		if v:IsA("TextButton") then
+			v:Destroy()
+		end
+	end
 
-	for _,plr in ipairs(game.Players:GetPlayers()) do
+	for _,plr in ipairs(Players:GetPlayers()) do
 		if plr ~= player then
 			local btn = Instance.new("TextButton", scroll)
-			btn.Size = UDim2.new(1,-8,0,24)
+			btn.Size = UDim2.new(1,-10,0,26)
 			btn.Text = plr.Name
 			btn.BackgroundColor3 = Color3.fromRGB(220,220,220)
-			btn.TextColor3 = Color3.fromRGB(0,0,0)
-			btn.Font = Enum.Font.SourceSans
-			btn.TextSize = 13
-			Instance.new("UICorner", btn).CornerRadius = UDim.new(0.2,0)
+			btn.TextColor3 = Color3.new(0,0,0)
+			btn.Font = Enum.Font.Gotham
+			btn.TextSize = 12
+			Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 
 			btn.MouseButton1Click:Connect(function()
 				selectedPlayer = plr
-				playerDropdown.Text = plr.Name
-				dropdownFrame.Visible = false
+				dropBtn.Text = plr.Name
+				dropFrame.Visible = false
 			end)
 		end
 	end
 end
 
-playerDropdown.MouseButton1Click:Connect(function()
-	dropdownFrame.Visible = not dropdownFrame.Visible
-	if dropdownFrame.Visible then
-		refreshPlayerList()
+dropBtn.MouseButton1Click:Connect(function()
+	dropFrame.Visible = not dropFrame.Visible
+	if dropFrame.Visible then
+		refreshPlayers()
 	end
 end)
 
-tpButton.MouseButton1Click:Connect(function()
+tpBtn.MouseButton1Click:Connect(function()
 	if not selectedPlayer then return end
-
-	local targetChar = selectedPlayer.Character
-	if not targetChar then return end
-
-	local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
-	local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-
-	if targetRoot and myRoot then
-		myRoot.CFrame = targetRoot.CFrame * CFrame.new(0,0,-3)
+	local myRoot = getChar():FindFirstChild("HumanoidRootPart")
+	local tRoot = selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart")
+	if myRoot and tRoot then
+		myRoot.CFrame = tRoot.CFrame * CFrame.new(0,0,-3)
 	end
 end)
 
-game.Players.PlayerAdded:Connect(refreshPlayerList)
-game.Players.PlayerRemoving:Connect(refreshPlayerList)
+Players.PlayerAdded:Connect(refreshPlayers)
+Players.PlayerRemoving:Connect(refreshPlayers)
 
-
-------------------------------------------------
---// HOTKEY
-------------------------------------------------
-UserInputService.InputBegan:Connect(function(i,gp)
-	if gp then return end
-	if i.KeyCode == Enum.KeyCode.F then toggleFly() end
-	if i.KeyCode == Enum.KeyCode.X then toggleWalkSpeed() end
-end)
+--================================--
+-- END
+--================================--
